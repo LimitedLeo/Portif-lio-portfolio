@@ -1,0 +1,57 @@
+#include <iostream>
+#include <string>
+
+class Conta {
+protected:
+    std::string numeroConta;
+    double saldo;
+
+public:
+    Conta(std::string numeroConta, double saldoInicial)
+        : numeroConta(numeroConta), saldo(saldoInicial) {}
+
+    virtual bool sacar(double valor) = 0; // Método abstrato
+
+    double getSaldo() const { return saldo; }
+    std::string getNumeroConta() const { return numeroConta; }
+
+    virtual ~Conta() {}
+};
+class ContaCorrente : public Conta {
+public:
+    ContaCorrente(std::string numeroConta, double saldoInicial)
+        : Conta(numeroConta, saldoInicial) {}
+
+    bool sacar(double valor) override {
+        if (saldo >= valor) {
+            saldo -= valor;
+            std::cout << "Saque de " << valor << " realizado com sucesso na Conta Corrente.\n";
+            return true;
+        }
+        return false;
+    }
+};
+class ContaPoupanca : public Conta {
+public:
+    ContaPoupanca(std::string numeroConta, double saldoInicial)
+        : Conta(numeroConta, saldoInicial) {}
+
+    bool sacar(double valor) override {
+        if (saldo >= valor) {
+            saldo -= valor;
+            std::cout << "Saque de " << valor << " realizado com sucesso na Conta Poupança.\n";
+            return true;
+        }
+        return false;
+    }
+};
+int main() {
+    ContaProxy conta1(new ContaCorrente("123", 500));
+    ContaProxy conta2(new ContaPoupanca("456", 300));
+
+    conta1.sacar(600); // Deve disparar erro de saldo insuficiente
+    conta2.sacar(100); // Deve funcionar normalmente
+    conta2.sacar(500); // Deve disparar erro de saldo insuficiente
+
+    return 0;
+}
