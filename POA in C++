@@ -17,29 +17,47 @@ public:
 
     virtual ~Conta() {}
 };
-class ContaCorrente : public Conta {
-public:
-    ContaCorrente(std::string numeroConta, double saldoInicial)
-        : Conta(numeroConta, saldoInicial) {}
 
-    bool sacar(double valor) override {
-        if (saldo >= valor) {
-            saldo -= valor;
-            std::cout << "Saque de " << valor << " realizado com sucesso na Conta Corrente.\n";
-            return true;
+class ContaProxy {
+private:
+    Conta* conta;
+
+public:
+    ContaProxy(Conta* conta) : conta(conta) {}
+
+    bool sacar(double valor) {
+        std::cout << "[LOG] Tentando sacar " << valor << " da conta " << conta->getNumeroConta() << "\n";
+        
+        if (!conta->sacar(valor)) {
+            std::cout << "[ERRO] Saldo insuficiente na conta " << conta->getNumeroConta() << "\n";
+            return false;
         }
-        return false;
+
+        if (dynamic_cast<ContaInvestimento*>(conta)) { // Verifica se é ContaInvestimento
+            std::cout << "[INFO] Taxa cobrada no saque da Conta Investimento\n";
+        }
+
+        return true;
     }
+
+    ~ContaProxy() { delete conta; }
 };
-class ContaPoupanca : public Conta {
+
+
+class ContaInvestimento : public Conta {
+private:
+    double taxaSaque; // Exemplo: 2% de taxa por saque
+
 public:
-    ContaPoupanca(std::string numeroConta, double saldoInicial)
-        : Conta(numeroConta, saldoInicial) {}
+    ContaInvestimento(std::string numeroConta, double saldoInicial, double taxa)
+        : Conta(numeroConta, saldoInicial), taxaSaque(taxa) {}
 
     bool sacar(double valor) override {
-        if (saldo >= valor) {
-            saldo -= valor;
-            std::cout << "Saque de " << valor << " realizado com sucesso na Conta Poupança.\n";
+        double valorTotal = valor + (valor * taxaSaque); // Aplica a taxa
+        if (saldo >= valorTotal) {
+            saldo -= valorTotal;
+            std::cout << "Saque de " << valor << " realizado com sucesso na Conta Investimento.\n";
+            std::cout << "Taxa de saque aplicada: " << (valor * taxaSaque) << "\n";
             return true;
         }
         return false;
@@ -48,10 +66,13 @@ public:
 int main() {
     ContaProxy conta1(new ContaCorrente("123", 500));
     ContaProxy conta2(new ContaPoupanca("456", 300));
+    ContaProxy conta3(new ContaInvestimento("789", 1000, 0.02)); // 2% de taxa
 
-    conta1.sacar(600); // Deve disparar erro de saldo insuficiente
-    conta2.sacar(100); // Deve funcionar normalmente
-    conta2.sacar(500); // Deve disparar erro de saldo insuficiente
+    conta1.sacar(600);  // Saldo insuficiente
+    conta2.sacar(100);  // Saque bem-sucedido
+    conta2.sacar(500);  // Saldo insuficiente
+    conta3.sacar(200);  // Saque bem-sucedido + taxa aplicada (204 será descontado)
+    conta3.sacar(900);  // Saldo insuficiente
 
     return 0;
 }
