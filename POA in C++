@@ -1,3 +1,5 @@
+// Adicionar o modulo de limpeza de chat, adicionar o case , uma simulação de banco de dados e separar o codigo por modulos.
+
 #include <iostream>
 #include <fstream> // Para arquivos
 #include <string>
